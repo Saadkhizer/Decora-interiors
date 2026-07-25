@@ -1,0 +1,56 @@
+# Render.com Blueprint — deploys the backend API with a persistent disk
+# for the SQLite database and uploaded images.
+#
+# Usage: push this repo to GitHub, then in Render: New + → Blueprint → pick the repo.
+# After it deploys, set CLIENT_ORIGIN / CLIENT_URL / APP_URL to your real URLs and
+# add your JazzCash / Easypaisa keys with PAYMENTS_MODE=live.
+services:
+  - type: web
+    name: sami-jee-decor-api
+    runtime: node
+    region: singapore
+    plan: starter
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PORT
+        value: "4100"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PAYMENTS_MODE
+        value: sandbox
+      - key: CURRENCY
+        value: PKR
+      - key: CLIENT_ORIGIN
+        sync: false
+      - key: CLIENT_URL
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: JAZZCASH_MERCHANT_ID
+        sync: false
+      - key: JAZZCASH_PASSWORD
+        sync: false
+      - key: JAZZCASH_INTEGRITY_SALT
+        sync: false
+      - key: JAZZCASH_POST_URL
+        sync: false
+      - key: EASYPAISA_STORE_ID
+        sync: false
+      - key: EASYPAISA_HASH_KEY
+        sync: false
+      - key: EASYPAISA_POST_URL
+        sync: false

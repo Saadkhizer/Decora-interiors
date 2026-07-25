@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+server/data/*.db
+server/data/*.db-journal
+server/uploads/*
+!server/uploads/.gitkeep
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
