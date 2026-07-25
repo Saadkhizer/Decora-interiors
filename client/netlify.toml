@@ -1,0 +1,17 @@
+# Netlify config (used when you connect this repo to Netlify).
+# For a quick demo you can also just drag the built `client/dist` folder onto
+# https://app.netlify.com/drop — the bundled demo data makes it work with no backend.
+[build]
+  base = "client"
+  command = "npm install && npm run build"
+  publish = "dist"
+
+# SPA fallback so client-side routes (e.g. /shop, /product/...) work on refresh.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# To connect a REAL backend instead of the bundled demo data, set this in
+# Netlify → Site settings → Environment variables, then redeploy:
+#   VITE_API_URL = https://your-api-url.onrender.com
