@@ -357,4 +357,5 @@ function seed() {
   console.log(`   Admin login → ${process.env.ADMIN_EMAIL || 'admin@samijeedecor.com'} / ${process.env.ADMIN_PASSWORD || 'admin123'}`);
 }
 
-seed();
+if (process.argv[1].includes('seed')) seed();
+export default seed;
