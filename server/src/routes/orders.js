@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { customAlphabet } from 'nanoid';
 import db from '../db.js';
 import { requireAuth, requireAdmin, optionalCustomerId } from '../middleware/auth.js';
+import { formLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 const orderId = customAlphabet('0123456789ABCDEFGHJKLMNPQRSTUVWXYZ', 8);
@@ -29,7 +30,7 @@ function priceCart(items) {
 }
 
 // POST /api/orders  — create an order (guest checkout)
-router.post('/', (req, res, next) => {
+router.post('/', formLimiter, (req, res, next) => {
   try {
     const b = req.body || {};
     const { customer_name, phone } = b;
@@ -75,10 +76,25 @@ router.post('/', (req, res, next) => {
 });
 
 // GET /api/orders/track/:number  — public order tracking
+// This endpoint has no authentication, so it must not return the customer's
+// email, phone, address or internal notes. Only what is needed to show status.
 router.get('/track/:number', (req, res) => {
   const row = db.prepare('SELECT * FROM orders WHERE order_number = ?').get(req.params.number);
   if (!row) return res.status(404).json({ error: 'Order not found' });
-  res.json(hydrate(row));
+  const full = hydrate(row);
+  res.json({
+    order_number: full.order_number,
+    customer_name: full.customer_name,
+    items: full.items,
+    subtotal: full.subtotal,
+    shipping: full.shipping,
+    total: full.total,
+    payment_method: full.payment_method,
+    payment_status: full.payment_status,
+    status: full.status,
+    city: full.city,
+    created_at: full.created_at,
+  });
 });
 
 // GET /api/orders  (admin) — list with optional status filter

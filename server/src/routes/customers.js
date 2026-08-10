@@ -2,6 +2,7 @@ import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import db from '../db.js';
 import { signCustomerToken, requireCustomer } from '../middleware/auth.js';
+import { authLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ const publicCustomer = (c) => ({
 });
 
 // POST /api/customers/register
-router.post('/register', (req, res) => {
+router.post('/register', authLimiter, (req, res) => {
   const { name, email, password, phone } = req.body || {};
   if (!name || !email || !password)
     return res.status(400).json({ error: 'Name, email and password are required' });
@@ -33,7 +34,7 @@ router.post('/register', (req, res) => {
 });
 
 // POST /api/customers/login
-router.post('/login', (req, res) => {
+router.post('/login', authLimiter, (req, res) => {
   const { email, password } = req.body || {};
   const customer = db.prepare('SELECT * FROM customers WHERE email = ?').get((email || '').toLowerCase().trim());
   if (!customer || !bcrypt.compareSync(password || '', customer.password_hash))

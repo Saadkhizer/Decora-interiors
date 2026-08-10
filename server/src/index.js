@@ -15,12 +15,14 @@ import customerRoutes from "./routes/customers.js";
 import blogRoutes from "./routes/blog.js";
 import galleryRoutes from "./routes/gallery.js";
 
-// Auto-seed on fresh deployment if database is empty
+// Auto-seed ONLY on a genuinely fresh database. seed() performs a full
+// DELETE FROM on every table, so it must never run against a populated one.
 import db from "./db.js";
 const userCount = db.prepare("SELECT COUNT(*) c FROM users").get().c;
 if (userCount === 0) {
   console.log("🌱 Empty database detected — running seed...");
   const { default: seed } = await import("./seed.js");
+  seed();
 }
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -33,12 +35,32 @@ const origins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
   .map((s) => s.trim());
 app.use(cors({ origin: origins, credentials: true }));
 
+// Minimal security headers (equivalent to the parts of helmet that matter for
+// a JSON API + static frontend, without adding a dependency).
+app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+});
+
 app.use(express.json({ limit: "5mb" }));
 // Parse x-www-form-urlencoded bodies (payment gateways post back in this format).
 app.use(express.urlencoded({ extended: true }));
 
 // Serve uploaded images.
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "..", "uploads"), {
+    // Never let an uploaded file be interpreted as markup or script.
+    setHeaders: (res) => {
+      res.setHeader("Content-Security-Policy", "default-src 'none'; img-src 'self'");
+      res.setHeader("X-Content-Type-Options", "nosniff");
+    },
+  }),
+);
 
 // API routes
 app.use("/api/auth", authRoutes);
@@ -74,9 +96,6 @@ app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message || "Server error" });
 });
-
-// Auto-seed if database is empty
-import("./seed.js").then((m) => m.default?.()).catch(() => {});
 
 app.listen(PORT, () => {
   console.log(`🚀 Decora API running on http://localhost:${PORT}`);
