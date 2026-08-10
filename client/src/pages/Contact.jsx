@@ -7,7 +7,9 @@ import Breadcrumbs from '../components/ui/Breadcrumbs.jsx';
 
 export default function Contact() {
   const toast = useToast();
-  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
+  // `website` is a honeypot: hidden from real users, filled in by bots.
+  // The API silently discards any submission that has it set.
+  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '', website: '' });
   const [submitting, setSubmitting] = useState(false);
   const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -53,6 +55,17 @@ export default function Contact() {
         <div className="card p-6 lg:col-span-3 lg:p-8">
           <h2 className="text-2xl font-semibold">Send us a message</h2>
           <form onSubmit={submit} className="mt-6 grid gap-4 sm:grid-cols-2">
+            {/* Honeypot — hidden from users and screen readers, visible to bots. */}
+            <input
+              type="text"
+              name="website"
+              value={form.website}
+              onChange={set('website')}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', width: 1, height: 1, opacity: 0 }}
+            />
             <div>
               <label className="label" htmlFor="c-name">Name *</label>
               <input id="c-name" required value={form.name} onChange={set('name')} className="input" />

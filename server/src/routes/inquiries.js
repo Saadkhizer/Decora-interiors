@@ -1,25 +1,37 @@
 import { Router } from 'express';
 import db from '../db.js';
 import { requireAuth, requireAdmin } from '../middleware/auth.js';
+import { formLimiter } from '../middleware/rateLimit.js';
 
 const router = Router();
 
 // POST /api/inquiries  — contact form or "request a quote" (public)
-router.post('/', (req, res) => {
+router.post('/', formLimiter, (req, res) => {
   const b = req.body || {};
+
+  // Honeypot: a hidden field real users never fill in. Bots fill everything.
+  // Return 201 so the bot believes it succeeded and does not retry.
+  if (b.website) return res.status(201).json({ ok: true });
+
   if (!b.name || !b.message)
     return res.status(400).json({ error: 'Name and message are required' });
+
+  // Cap field lengths — express.json allows 5mb, which is far more than any
+  // legitimate contact form needs and makes the table easy to flood.
+  const cap = (v, n) => String(v ?? '').slice(0, n).trim();
+  if (String(b.message).length > 5000)
+    return res.status(400).json({ error: 'Message is too long' });
   const info = db
     .prepare(
       `INSERT INTO inquiries (name, email, phone, subject, message, product_id, type, status)
        VALUES (@name, @email, @phone, @subject, @message, @product_id, @type, 'new')`
     )
     .run({
-      name: b.name,
-      email: b.email || '',
-      phone: b.phone || '',
-      subject: b.subject || (b.type === 'quote' ? 'Quote request' : 'Contact enquiry'),
-      message: b.message,
+      name: cap(b.name, 120),
+      email: cap(b.email, 200),
+      phone: cap(b.phone, 40),
+      subject: cap(b.subject, 200) || (b.type === 'quote' ? 'Quote request' : 'Contact enquiry'),
+      message: cap(b.message, 5000),
       product_id: b.product_id || null,
       type: b.type === 'quote' ? 'quote' : 'contact',
     });

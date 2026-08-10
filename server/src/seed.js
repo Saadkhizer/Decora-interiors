@@ -6,7 +6,11 @@
 // your client's real product photos (or upload them through the Admin panel).
 import 'dotenv/config';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import db from './db.js';
+
+let adminEmail = '';
+let adminGeneratedPassword = null;
 
 const img = (id, w = 900) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
@@ -269,10 +273,17 @@ function seed() {
 
     // Admin user
     const email = process.env.ADMIN_EMAIL || 'admin@samijeedecor.com';
-    const password = process.env.ADMIN_PASSWORD || 'admin123';
+    // No hardcoded fallback password. If ADMIN_PASSWORD is not set we generate a
+    // random one and print it once to the deploy logs, so an unconfigured
+    // deployment can never end up with guessable admin credentials.
+    const generated = !process.env.ADMIN_PASSWORD;
+    const password =
+      process.env.ADMIN_PASSWORD || crypto.randomBytes(12).toString('base64url');
     db.prepare(
       `INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, 'admin')`
     ).run('Store Admin', email, bcrypt.hashSync(password, 10));
+    adminEmail = email;
+    adminGeneratedPassword = generated ? password : null;
 
     // Demo inquiries
     const insertInq = db.prepare(
@@ -354,7 +365,11 @@ function seed() {
     inquiries: db.prepare('SELECT COUNT(*) c FROM inquiries').get().c,
   };
   console.log('✅ Seed complete:', counts);
-  console.log(`   Admin login → ${process.env.ADMIN_EMAIL || 'admin@samijeedecor.com'} / ${process.env.ADMIN_PASSWORD || 'admin123'}`);
+  console.log(`   Admin email → ${adminEmail}`);
+  if (adminGeneratedPassword) {
+    console.log(`   ⚠️  ADMIN_PASSWORD was not set. Generated one-time password: ${adminGeneratedPassword}`);
+    console.log('   Save it now, then set ADMIN_PASSWORD in your environment and re-seed.');
+  }
 }
 
 if (process.argv[1].includes('seed')) seed();

@@ -246,5 +246,8 @@ export const seedInquiries = [
 ];
 
 // Built-in demo customer + admin (for the standalone demo logins).
-export const demoCustomer = { id: 1, name: 'Ali Customer', email: 'customer@example.com', phone: '+92 300 7654321', address: '', city: 'Islamabad', password: 'customer123' };
-export const demoAdmin = { id: 1, name: 'Store Admin', email: 'admin@samijeedecor.com', role: 'admin', password: 'admin123' };
+// These credentials ship inside the public frontend bundle — anyone can read them
+// in DevTools. They must therefore NEVER match the real backend admin account.
+// The offline demo mode is the only thing that uses them.
+export const demoCustomer = { id: 1, name: 'Demo Customer', email: 'demo.customer@example.com', phone: '+92 300 0000000', address: '', city: 'Islamabad', password: 'demo-customer' };
+export const demoAdmin = { id: 1, name: 'Demo Admin', email: 'demo.admin@example.com', role: 'admin', password: 'demo-admin' };
