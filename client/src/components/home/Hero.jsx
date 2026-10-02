@@ -3,8 +3,22 @@ import { motion } from 'framer-motion';
 import { ArrowRight, Star, Ruler, Truck } from 'lucide-react';
 import { site } from '../../config/site.js';
 
-const heroImg =
-  'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80';
+// The store's own product photography: one tile per core category, so the
+// hero shows what the business actually supplies (served from /public).
+const tiles = {
+  blinds: {
+    src: '/products/window-blinds/natural-wooden-venetian-blinds.jpg',
+    alt: 'Natural wooden venetian blinds with warm light coming through the slats',
+  },
+  wallpaper: {
+    src: '/products/wallpaper/damask-luxe-textured-wallpaper.jpg',
+    alt: 'Damask wallpaper in dusty rose and blue',
+  },
+  flooring: {
+    src: '/products/wooden-flooring/herringbone-parquet-flooring.jpg',
+    alt: 'Warm parquet wood flooring laid in a basket-weave pattern',
+  },
+};
 
 export default function Hero() {
   return (
@@ -55,11 +69,21 @@ export default function Hero() {
           transition={{ duration: 0.7, delay: 0.1 }}
           className="relative"
         >
-          <div className="relative overflow-hidden rounded-[2rem] shadow-lift ring-1 ring-linen">
+          <div className="grid aspect-[4/5] grid-cols-2 grid-rows-2 gap-2 overflow-hidden rounded-[2rem] shadow-lift ring-1 ring-linen">
             <img
-              src={heroImg}
-              alt="Modern living room with feature wall and wood flooring"
-              className="aspect-[4/5] w-full object-cover"
+              src={tiles.blinds.src}
+              alt={tiles.blinds.alt}
+              className="row-span-2 h-full w-full object-cover"
+            />
+            <img
+              src={tiles.wallpaper.src}
+              alt={tiles.wallpaper.alt}
+              className="h-full w-full object-cover"
+            />
+            <img
+              src={tiles.flooring.src}
+              alt={tiles.flooring.alt}
+              className="h-full w-full object-cover"
             />
           </div>
           {/* Floating stat card */}
